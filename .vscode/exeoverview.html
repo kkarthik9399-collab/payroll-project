@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Overview - Payroll & Sales</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#111827',
+                            900: '#0f172a',
+                            950: '#090d16',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card-hover:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.5), 0 0 20px -4px rgba(99, 102, 241, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8 antialiased">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <!-- Page Title & Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-800">
+            <div>
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl text-white shadow-lg shadow-indigo-500/20">
+                        <i class="fa-solid fa-chart-line text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                            Executive Overview
+                            <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold px-2.5 py-0.5 rounded-full">Live Analytics</span>
+                        </h1>
+                        <p class="text-xs text-slate-400 mt-0.5">High-level insights on sales revenue, payroll allocation, and operational profitability.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center space-x-3">
+                <a href="../hrdashboard.html" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center space-x-2 transition-all">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to Dashboard</span>
+                </a>
+                <button onclick="exportData()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center space-x-2 transition-all">
+                    <i class="fa-solid fa-download text-indigo-400"></i>
+                    <span>Export CSV</span>
+                </button>
+                <button onclick="triggerPrint()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center space-x-2 shadow-lg shadow-indigo-600/30 transition-all">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>Executive Briefing</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Interactive Filter Bar -->
+        <div class="glass-card p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <span class="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-filter text-indigo-400"></i> Filters:
+                </span>
+                
+                <!-- Date Range Picker -->
+                <div class="relative">
+                    <select id="filterPeriod" onchange="applyFilters()" class="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-indigo-500 appearance-none cursor-pointer">
+                        <option value="ytd">Year to Date (2026)</option>
+                        <option value="q1">Q1 2026</option>
+                        <option value="q2">Q2 2026</option>
+                        <option value="custom">Custom Date Range</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-2.5 text-[10px] text-slate-400 pointer-events-none"></i>
+                </div>
+
+                <!-- Region Selector -->
+                <div class="relative">
+                    <select id="filterRegion" onchange="applyFilters()" class="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-indigo-500 appearance-none cursor-pointer">
+                        <option value="global">All Regions (Global)</option>
+                        <option value="namer">North America</option>
+                        <option value="emea">EMEA</option>
+                        <option value="apac">APAC</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-2.5 text-[10px] text-slate-400 pointer-events-none"></i>
+                </div>
+
+                <!-- Department Filter -->
+                <div class="relative">
+                    <select id="filterDept" onchange="applyFilters()" class="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-xl pl-3 pr-8 py-2 focus:outline-none focus:border-indigo-500 appearance-none cursor-pointer">
+                        <option value="all">All Departments</option>
+                        <option value="enterprise">Enterprise Sales</option>
+                        <option value="smb">SMB & Commercial</option>
+                        <option value="eng">Product & Engineering</option>
+                        <option value="mktg">Growth Marketing</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-2.5 text-[10px] text-slate-400 pointer-events-none"></i>
+                </div>
+            </div>
+
+            <!-- Quick Stats indicator inside filter bar -->
+            <div class="flex items-center space-x-2 text-xs text-slate-400 border-t lg:border-t-0 border-slate-800 pt-2 lg:pt-0 w-full lg:w-auto justify-between lg:justify-end">
+                <span>Last Refreshed: <strong class="text-slate-200" id="lastRefreshed">Just now</strong></span>
+                <button onclick="refreshData()" class="p-1.5 hover:bg-slate-800 rounded-lg text-indigo-400 hover:text-indigo-300 transition-colors">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Executive Top Metric Bar (5 KPIs) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            
+            <!-- KPI 1: YTD Revenue -->
+            <div class="glass-card p-4 rounded-2xl glass-card-hover flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">YTD Sales Revenue</span>
+                    <div class="p-2 bg-cyan-500/10 text-cyan-400 rounded-xl">
+                        <i class="fa-solid fa-arrow-trend-up text-sm"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="text-2xl font-extrabold text-white tracking-tight" id="kpiRevenue">₹14,280,000</div>
+                    <div class="mt-1 flex items-center justify-between text-xs">
+                        <span class="text-emerald-400 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-caret-up"></i> +16.4% YoY
+                        </span>
+                        <span class="text-slate-500 text-[10px]">Target: ₹13.5M</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 2: Total Payroll Spend -->
+            <div class="glass-card p-4 rounded-2xl glass-card-hover flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Payroll Spend</span>
+                    <div class="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl">
+                        <i class="fa-solid fa-wallet text-sm"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="text-2xl font-extrabold text-white tracking-tight" id="kpiPayroll">₹3,620,400</div>
+                    <div class="mt-1 flex items-center justify-between text-xs">
+                        <span class="text-emerald-400 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-caret-down"></i> -2.1% Budget
+                        </span>
+                        <span class="text-slate-500 text-[10px]">25.3% Revenue</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 3: Net Profit Margin -->
+            <div class="glass-card p-4 rounded-2xl glass-card-hover flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Net Margin</span>
+                    <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl">
+                        <i class="fa-solid fa-pie-chart text-sm"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="text-2xl font-extrabold text-white tracking-tight" id="kpiMargin">31.8%</div>
+                    <div class="mt-1 flex items-center justify-between text-xs">
+                        <span class="text-emerald-400 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-caret-up"></i> +3.2%
+                        </span>
+                        <span class="text-slate-500 text-[10px]">Benchmark 28%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 4: Headcount Efficiency -->
+            <div class="glass-card p-4 rounded-2xl glass-card-hover flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Rev / Headcount</span>
+                    <div class="p-2 bg-purple-500/10 text-purple-400 rounded-xl">
+                        <i class="fa-solid fa-user-gear text-sm"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="text-2xl font-extrabold text-white tracking-tight" id="kpiEfficiency">₹101,276</div>
+                    <div class="mt-1 flex items-center justify-between text-xs">
+                        <span class="text-purple-400 font-semibold">141 Total FTE</span>
+                        <span class="text-slate-500 text-[10px]">+12.5% YoY</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 5: Avg Sales Commission -->
+            <div class="glass-card p-4 rounded-2xl glass-card-hover flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Avg Rep Commission</span>
+                    <div class="p-2 bg-amber-500/10 text-amber-400 rounded-xl">
+                        <i class="fa-solid fa-coins text-sm"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="text-2xl font-extrabold text-white tracking-tight" id="kpiCommission">₹14,850</div>
+                    <div class="mt-1 flex items-center justify-between text-xs">
+                        <span class="text-amber-400 font-semibold">88.4% Quota Att.</span>
+                        <span class="text-slate-500 text-[10px]">Paid Monthly</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Middle Section: Visualizations -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Chart 1: Revenue vs Payroll Line Chart (2 Columns Wide) -->
+            <div class="lg:col-span-2 glass-card p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                    <div>
+                        <h3 class="font-bold text-slate-100 text-base">Monthly Revenue Trend vs Payroll Cost</h3>
+                        <p class="text-xs text-slate-400">Comparing gross sales trajectory against payroll burden over time</p>
+                    </div>
+                    <div class="flex items-center space-x-4 text-xs">
+                        <span class="flex items-center gap-1.5 text-slate-300">
+                            <span class="w-3 h-1 rounded-full bg-cyan-400 inline-block"></span> Sales Revenue
+                        </span>
+                        <span class="flex items-center gap-1.5 text-slate-300">
+                            <span class="w-3 h-1 rounded-full bg-purple-500 inline-block"></span> Total Payroll
+                        </span>
+                    </div>
+                </div>
+                <div class="relative h-72 w-full">
+                    <canvas id="lineChartRevVsPay"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Sales Channels & Traffic (Donut Chart) -->
+            <div class="glass-card p-5 rounded-2xl flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h3 class="font-bold text-slate-100 text-base">Revenue Channels</h3>
+                        <p class="text-xs text-slate-400">Sales origin & traffic breakdown</p>
+                    </div>
+                    <span class="p-1.5 bg-slate-800 text-indigo-400 text-xs rounded-lg font-semibold">Q4 2026</span>
+                </div>
+                <div class="relative h-56 flex items-center justify-center my-auto">
+                    <canvas id="donutChartChannels"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-center text-xs pt-3 border-t border-slate-800">
+                    <div class="bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block text-[10px]">Top Channel</span>
+                        <span class="font-bold text-cyan-400">Enterprise Direct (45%)</span>
+                    </div>
+                    <div class="bg-slate-900/60 p-2 rounded-xl border border-slate-800">
+                        <span class="text-slate-400 block text-[10px]">Highest Growth</span>
+                        <span class="font-bold text-emerald-400">Partner Ops (+24%)</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Department Comparison Section (Bar Chart) -->
+        <div class="glass-card p-5 rounded-2xl">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                <div>
+                    <h3 class="font-bold text-slate-100 text-base">Departmental Payroll Overhead vs. Sales Output</h3>
+                    <p class="text-xs text-slate-400">Evaluating revenue production efficiency against employee costs across key divisions</p>
+                </div>
+                <div class="flex items-center space-x-3 text-xs">
+                    <span class="flex items-center gap-1.5 text-slate-300">
+                        <span class="w-3 h-3 rounded bg-indigo-500 inline-block"></span> Sales Generated
+                    </span>
+                    <span class="flex items-center gap-1.5 text-slate-300">
+                        <span class="w-3 h-3 rounded bg-rose-500/80 inline-block"></span> Payroll Expense
+                    </span>
+                </div>
+            </div>
+            <div class="relative h-64 w-full">
+                <canvas id="barChartDeptComparison"></canvas>
+            </div>
+        </div>
+
+        <!-- Executive Detail Data Table -->
+        <div class="glass-card rounded-2xl overflow-hidden">
+            
+            <!-- Table Controls Header -->
+            <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="font-bold text-slate-100 text-base flex items-center gap-2">
+                        Executive Division Performance
+                        <span class="bg-indigo-500/20 text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-indigo-500/30" id="recordCount">5 Divisions</span>
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Headcount allocations, gross revenues, and return on investment (ROI) ratios.</p>
+                </div>
+
+                <!-- Table Search & Filter -->
+                <div class="flex items-center space-x-3">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                        <input type="text" id="tableSearch" onkeyup="filterTable()" placeholder="Search division or VP..." class="bg-slate-900 border border-slate-700 text-xs text-slate-200 pl-8 pr-3 py-2 rounded-xl focus:outline-none focus:border-indigo-500 w-full sm:w-56">
+                    </div>
+                    <select id="tableFilterStatus" onchange="filterTable()" class="bg-slate-900 border border-slate-700 text-xs text-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500">
+                        <option value="all">All Statuses</option>
+                        <option value="exceeding">Exceeding</option>
+                        <option value="optimal">Optimal</option>
+                        <option value="review">Under Review</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table Structure -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-900/90 uppercase text-[10px] text-slate-400 font-bold tracking-wider border-b border-slate-800">
+                        <tr>
+                            <th scope="col" class="py-3.5 px-5">Executive / Division</th>
+                            <th scope="col" class="py-3.5 px-4 text-center">Headcount</th>
+                            <th scope="col" class="py-3.5 px-4">Gross Sales Generated</th>
+                            <th scope="col" class="py-3.5 px-4">Payroll Overhead</th>
+                            <th scope="col" class="py-3.5 px-4">Sales ROI Ratio</th>
+                            <th scope="col" class="py-3.5 px-4">Performance Status</th>
+                            <th scope="col" class="py-3.5 px-4 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="execTableBody" class="divide-y divide-slate-800/60">
+                        <!-- Content populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Footer -->
+            <div class="p-4 bg-slate-900/40 border-t border-slate-800 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <span>Showing consolidated financial metrics for fiscal year 2026</span>
+                <div class="flex items-center space-x-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-slate-300 font-medium">Audit Status: Verified & Compliant</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 border border-slate-700 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <div id="toastIcon" class="p-1 bg-indigo-500/20 text-indigo-400 rounded-lg">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <span id="toastMsg">Action completed successfully</span>
+    </div>
+
+    <script>
+        // Master Data Array for Executive Divisions
+        const divisionData = [
+            { id: 1, name: "Enterprise Sales", vp: "Marcus Vance", head: 42, sales: "₹8,450,000", payroll: "₹1,240,000", roi: "6.81x", rawRoi: 6.81, status: "exceeding", badge: "Exceeding Target" },
+            { id: 2, name: "SMB & Commercial", vp: "Elena Rostova", head: 36, sales: "₹3,920,000", payroll: "₹810,000", roi: "4.83x", rawRoi: 4.83, status: "exceeding", badge: "Exceeding Target" },
+            { id: 3, name: "Growth Marketing", vp: "Liam Gallagher", head: 22, sales: "₹1,910,000", payroll: "₹490,000", roi: "3.89x", rawRoi: 3.89, status: "optimal", badge: "Optimal" },
+            { id: 4, name: "Strategic Partnerships", vp: "Ananya Patel", head: 14, sales: "₹1,640,000", payroll: "₹380,000", roi: "4.31x", rawRoi: 4.31, status: "optimal", badge: "Optimal" },
+            { id: 5, name: "Client Success & Ops", vp: "David Chen", head: 27, sales: "₹820,000", payroll: "₹700,400", roi: "1.17x", rawRoi: 1.17, status: "review", badge: "Under Review" }
+        ];
+
+        let lineChart, donutChart, barChart;
+
+        window.onload = function() {
+            renderTable(divisionData);
+            initLineChart();
+            initDonutChart();
+            initBarChart();
+        };
+
+        // Render Table Data
+        function renderTable(data) {
+            const tbody = document.getElementById('execTableBody');
+            tbody.innerHTML = '';
+
+            document.getElementById('recordCount').innerText = `${data.length} Divisions`;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-500">
+                            <i class="fa-solid fa-folder-open text-2xl mb-2 block"></i>
+                            No matching division records found.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition-colors border-b border-slate-800/60";
+
+                let statusBadge = '';
+                if (item.status === 'exceeding') {
+                    statusBadge = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"><i class="fa-solid fa-circle text-[6px]"></i> ${item.badge}</span>`;
+                } else if (item.status === 'optimal') {
+                    statusBadge = `<span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"><i class="fa-solid fa-circle text-[6px]"></i> ${item.badge}</span>`;
+                } else {
+                    statusBadge = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-[8px]"></i> ${item.badge}</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="py-3.5 px-5">
+                        <div class="font-bold text-slate-100 text-sm">${item.name}</div>
+                        <div class="text-[11px] text-slate-400">VP: ${item.vp}</div>
+                    </td>
+                    <td class="py-3.5 px-4 text-center font-medium text-slate-200">
+                        <span class="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">${item.head} FTE</span>
+                    </td>
+                    <td class="py-3.5 px-4 font-mono font-bold text-cyan-400">${item.sales}</td>
+                    <td class="py-3.5 px-4 font-mono text-slate-300">${item.payroll}</td>
+                    <td class="py-3.5 px-4">
+                        <span class="font-extrabold text-indigo-300">${item.roi}</span>
+                    </td>
+                    <td class="py-3.5 px-4">${statusBadge}</td>
+                    <td class="py-3.5 px-4 text-center">
+                        <button onclick="viewDivisionDetails('${item.name}')" class="p-2 bg-slate-900 hover:bg-indigo-600 text-slate-400 hover:text-white rounded-xl transition-all border border-slate-800">
+                            <i class="fa-solid fa-sliders text-xs"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Filter Table Logic
+        function filterTable() {
+            const search = document.getElementById('tableSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('tableFilterStatus').value;
+
+            const filtered = divisionData.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(search) || item.vp.toLowerCase().includes(search);
+                const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+
+            renderTable(filtered);
+        }
+
+        // Initialize Line Chart (Revenue vs Payroll)
+        function initLineChart() {
+            const ctx = document.getElementById('lineChartRevVsPay').getContext('2d');
+            
+            const gradientRev = ctx.createLinearGradient(0, 0, 0, 300);
+            gradientRev.addColorStop(0, 'rgba(6, 182, 212, 0.25)');
+            gradientRev.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
+
+            lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+                    datasets: [
+                        {
+                            label: 'Sales Revenue (₹)',
+                            data: [1850000, 2100000, 2350000, 2200000, 2600000, 2850000],
+                            borderColor: '#22d3ee',
+                            backgroundColor: gradientRev,
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#06b6d4',
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Total Payroll (₹)',
+                            data: [540000, 560000, 590000, 610000, 630000, 650000],
+                            borderColor: '#a855f7',
+                            backgroundColor: 'transparent',
+                            borderDash: [5, 5],
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointBackgroundColor: '#a855f7'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#334155',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: { 
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { 
+                                color: '#94a3b8',
+                                callback: v => '₹' + (v / 1000) + 'k'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize Donut Chart (Revenue Channels)
+        function initDonutChart() {
+            const ctx = document.getElementById('donutChartChannels').getContext('2d');
+            donutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Enterprise Direct', 'Partner Ecosystem', 'Inbound Digital', 'Outbound Sales'],
+                    datasets: [{
+                        data: [45, 25, 18, 12],
+                        backgroundColor: ['#22d3ee', '#6366f1', '#a855f7', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 10,
+                                color: '#94a3b8',
+                                font: { size: 10, family: 'Plus Jakarta Sans' },
+                                padding: 12
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize Bar Chart (Department Comparison)
+        function initBarChart() {
+            const ctx = document.getElementById('barChartDeptComparison').getContext('2d');
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Enterprise Sales', 'SMB Commercial', 'Growth Mktg', 'Partnerships', 'Client Ops'],
+                    datasets: [
+                        {
+                            label: 'Sales Generated (₹)',
+                            data: [8450000, 3920000, 1910000, 1640000, 820000],
+                            backgroundColor: '#6366f1',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Payroll Expense (₹)',
+                            data: [1240000, 810000, 490000, 380000, 700400],
+                            backgroundColor: 'rgba(244, 63, 94, 0.75)',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { size: 11 } }
+                        },
+                        y: { 
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { 
+                                color: '#94a3b8',
+                                callback: v => '₹' + (v >= 1000000 ? (v / 1000000) + 'M' : (v / 1000) + 'k')
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Global Interactive Controls
+        function applyFilters() {
+            const period = document.getElementById('filterPeriod').value;
+            const region = document.getElementById('filterRegion').value;
+            const dept = document.getElementById('filterDept').value;
+
+            // Update KPIs dynamically based on filter simulate
+            if (period === 'q1') {
+                document.getElementById('kpiRevenue').innerText = "₹3,410,000";
+                document.getElementById('kpiPayroll').innerText = "₹890,000";
+            } else if (period === 'q2') {
+                document.getElementById('kpiRevenue').innerText = "₹3,850,000";
+                document.getElementById('kpiPayroll').innerText = "₹910,000";
+            } else {
+                document.getElementById('kpiRevenue').innerText = "₹14,280,000";
+                document.getElementById('kpiPayroll').innerText = "₹3,620,400";
+            }
+
+            showToast(`Filters Applied: ${period.toUpperCase()} | ${region.toUpperCase()} | ${dept.toUpperCase()}`);
+        }
+
+        function refreshData() {
+            document.getElementById('lastRefreshed').innerText = new Date().toLocaleTimeString();
+            showToast("Overview metrics updated in real-time");
+        }
+
+        function viewDivisionDetails(deptName) {
+            showToast(`Opening deep-dive analysis for ${deptName}`);
+        }
+
+        function exportData() {
+            showToast("Exporting Executive Financial Data (CSV)...");
+        }
+
+        function triggerPrint() {
+            window.print();
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
